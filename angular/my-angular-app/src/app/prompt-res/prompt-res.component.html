@@ -1,0 +1,31 @@
+
+<div>
+    <div>
+        <input type="file" (change)="onFileSelected($event)">
+        <h1> show responses</h1>
+        <ul>
+            <li *ngFor="let question of reqResArray">
+                <p>{{ question.req }}</p>
+                <p>{{ question.res }}</p>    
+            </li>
+        </ul>
+    </div>
+        
+    <div>
+        <h1> ask a question</h1>
+        <input id="question" placeholder="Input Questions">
+    </div>
+    <div>
+        <button (click)="prepareFileForOllama()">Prepare File</button>
+        <button (click)="askQuestion()">Send Question</button>
+    </div>
+
+    <div>
+        <h1>Conversation History From Local Storage</h1>
+        <ul>
+            <li *ngFor="let question of conversationHistory">
+                <p>{{ question }}</p>   
+            </li>
+        </ul>
+    </div>
+</div>
