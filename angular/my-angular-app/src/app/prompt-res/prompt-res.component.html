@@ -1,30 +1,33 @@
 
 <div>
-    <div>
+    <div class="">
         <input type="file" (change)="onFileSelected($event)">
-        <h1> show responses</h1>
-        <ul>
+        <button *ngIf="fileContent" (click)="prepareFileForOllama($event)">Parse File - Long Runtime</button>
+        <h1>Chat <span *ngIf="rdy && reqResArray[0].req">{{reqResArray[0].req.substring(0, 50)}}</span></h1>
+        
+        <ul class="questionList">
             <li *ngFor="let question of reqResArray">
-                <p>{{ question.req }}</p>
-                <p>{{ question.res }}</p>    
+                <p class="question">{{ question.req }}</p>
+                <p class="answer">{{ question.res }}</p>
             </li>
         </ul>
     </div>
         
-    <div>
+    <div class="card">
         <h1> ask a question</h1>
-        <input id="question" placeholder="Input Questions">
+        <textarea id="question" placeholder="Input Questions"></textarea>
     </div>
-    <div>
-        <button (click)="prepareFileForOllama()">Prepare File</button>
+    <div >
         <button (click)="askQuestion()">Send Question</button>
     </div>
-
-    <div>
+    <div class="card">
         <h1>Conversation History From Local Storage</h1>
-        <ul>
+        <ul class="questionList">
             <li *ngFor="let question of conversationHistory">
-                <p>{{ question }}</p>   
+                <p class="question">{{ question.req }}</p>
+                <div class="answer">{{ question.res }}</div>
+                <!-- <p [innerHTML]="question.req" class="question"></p>   
+                <p [innerHTML]="question.res" class="answer"></p>    -->
             </li>
         </ul>
     </div>

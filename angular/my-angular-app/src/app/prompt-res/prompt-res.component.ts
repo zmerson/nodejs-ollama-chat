@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClient, HttpClientModule, HttpHandler, HttpHeaders } from '@angular/common/http';
 import { RouterOutlet } from '@angular/router';
+import { StorageService } from '../storage.service';
 
 @Component({
   selector: 'app-prompt-res',
@@ -21,9 +22,12 @@ export class PromptResComponent {
   fileContent: any;
   reqResArray: { req: string, res: string }[] = [];
   llamaFile: { [key: string]: string } = {};
-  conversationHistory: string[] = [];
+  conversationHistory: {req: string, res: string }[]= [];
+  rdy: boolean = false;
 
-  constructor( streamService: PromptResStreamService, private http: HttpClient) {
+
+
+  constructor( private storageService: StorageService, private http: HttpClient) {
     this.streamService = new PromptResStreamService();
    }
 
@@ -35,12 +39,21 @@ export class PromptResComponent {
       const question = inputEl.value;
       let res = await this.streamService.resStream(question);
       console.log("response: ", res);
-      this.responses.push(JSON.stringify(res.message.content))
-      this.reqResArray.push({ req: question, res: JSON.stringify(res.message.content) });
+      this.responses.push(res.message.content)
+
+      // parse formatting characters in answer such as \n, ** **, etc
+
+      // const answer = this.parseTextFormatting(res.message.content);
+      let answer = res.message.content;
+      this.reqResArray.push({ req: question, res: answer });
+      this.rdy = true;
+      // Save to local storage
+      this.storageService.messageCookieStore(question.substring(0,50), question, res)
+
       console.log("total messages: " , this.streamService.messages);
       inputEl.classList.remove('disabled');
-      // localStorage.setItem('question' + question.substring(0, 50), JSON.stringify(this.responses));
-      localStorage.setItem('question' , JSON.stringify(this.reqResArray));
+
+
     } catch(e: any){
       console.log("error: ", e);  
       inputEl.classList.remove('disabled');
@@ -68,11 +81,41 @@ export class PromptResComponent {
     // }
     ngOnInit() {
       // Load from local storage
-      const savedResponses = localStorage.getItem('question');
+      // const savedResponses = localStorage.getItem('question');
       // const savedReqResArray = localStorage.getItem('response');
       
-      if (savedResponses) {
-        this.conversationHistory = JSON.parse(savedResponses);
+      // get all cookies
+      let cookies = this.storageService.getAllCookies();
+
+
+      if (cookies) {
+        console.log("cookies: ", cookies);
+        
+        let keys = Object.keys(cookies);
+        // let values = Object.values(cookies);/
+        for (let i = 0; i < keys.length; i++) {
+          if (keys[i].startsWith('_')){
+            continue;
+          }
+          console.log("keys: ", keys);
+          console.log("values: ", cookies[keys[i]]);
+
+          try {
+            const req = cookies[keys[i]];
+            //remove spaces
+            console.log(this.storageService.getStorage(keys[i]))
+
+            let resRaw = this.storageService.getStorage(keys[i]);
+            let res = this.parseTextFormatting(JSON.parse(resRaw).message.content);
+            // const res = this.storageService.getStorage(keys[i]); 
+            console.log("got from cookie : ", decodeURIComponent(req));
+            console.log("got from storage: ", res); 
+            // let req = this.parseTextFormatting(values[i]);
+            this.conversationHistory.push({ req: req, res: res });
+          } catch (e: any) {
+            console.log("error: ", e);
+          }
+        }
       }
       
       // if (savedReqResArray) {
@@ -115,11 +158,13 @@ export class PromptResComponent {
         console.log("error: ", e);  
       }
     }
-    prepareFileForOllama() {
+    prepareFileForOllama(event: any) {
       // this.onFileSelected();
       // console.log("file content: ", this.fileContent)
       // split file content into lines, each line is a property in an object
+      let parseEl = event.target as HTMLButtonElement;
       let inputEl = document.getElementById('question') as HTMLInputElement;
+
       inputEl.classList.add('disabled');
       let question = inputEl.value;
 
@@ -152,5 +197,15 @@ export class PromptResComponent {
         };
         reader.readAsText(file);
       }
+    }
+    parseTextFormatting = (text: string) => {
+      text = text.replace(/\\n/g, '\n');
+      text = text.replace(/\*\*/g, '');
+      text = text.replace(/\\n\\n\d/g, '\n\n\d');
+      text = text.replace(/\\n\d/g, '\n\d');
+      text = text.replace(/\\t*/g, '');
+      // text = decodeURIComponent(text);
+      console.log("parsed text: ", text);
+      return text;
     }
 }
