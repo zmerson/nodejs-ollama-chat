@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import ollama from 'ollama'
-import { Message } from 'ollama';
+import ollama from 'ollama/browser'
+import { Message } from 'ollama/browser';
 
 @Injectable({
   providedIn: 'root'
