@@ -69,9 +69,34 @@
           },
           "defaultConfiguration": "production"
         },
+        "docs": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+          "outputPath": {
+            "base": "../../docs",
+            "browser": ""
+          },
+          "index": "../../docs/index.html",
+          "browser": "src/main.ts",
+          "polyfills": ["src/polyfills.ts"],
+          "tsConfig": "tsconfig.app.json",
+          "aot": true,
+          "assets": [
+            "src/favicon.ico",
+            "src/assets"
+          ],
+          "styles": [
+            "src/styles.css"
+          ],
+          "scripts": []
+          }
+        },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
+            "docs": {
+              "buildTarget": "my-angular-app:build:docs"
+            },
             "production": {
               "buildTarget": "my-angular-app:build:production"
             },
